@@ -2,8 +2,11 @@ package com.afonso.todo.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
 
 /**
  * TRATAMENTO GLOBAL DE ERROS
@@ -22,6 +25,37 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Captura erros de validação lançados quando o @Valid falha no @RequestBody.
+     *
+     * Quando o Spring valida o body e encontra campos inválidos, lança
+     * MethodArgumentNotValidException com a lista de todos os erros.
+     * Extraímos os erros campo a campo e devolvemos um 400 estruturado:
+     * {
+     *   "status": 400,
+     *   "mensagem": "Erro de validação",
+     *   "detalhes": ["titulo: O título é obrigatório", "descricao: ..."],
+     *   "timestamp": "..."
+     * }
+     *
+     * getBindingResult().getFieldErrors() — devolve a lista de campos que falharam.
+     * Cada FieldError tem: getField() (nome do campo) + getDefaultMessage() (a nossa mensagem).
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErroResposta> handleValidacao(MethodArgumentNotValidException ex) {
+        // extrai "campo: mensagem" para cada erro de campo
+        List<String> detalhes = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .toList();
+
+        ErroResposta erro = new ErroResposta(
+                HttpStatus.BAD_REQUEST.value(), // 400
+                "Erro de validação",
+                detalhes
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
 
     /**
      * @ExceptionHandler

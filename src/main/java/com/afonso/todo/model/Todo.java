@@ -1,6 +1,8 @@
 package com.afonso.todo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -34,13 +36,21 @@ public class Todo {
     private Long id;
 
     /**
-     * @Column(nullable = false) — esta coluna não pode ser NULL na base de dados.
-     * Se tentarmos guardar um Todo sem título, a BD rejeita.
+     * @NotBlank — valida ANTES de chegar à BD: rejeita null, "" e "   " (só espaços).
+     * @Size      — limita o comprimento da string.
+     * @Column(nullable = false) — garantia adicional ao nível da BD.
+     *
+     * A validação acontece em duas camadas:
+     *   1. Jakarta Validation (@NotBlank/@Size) — na camada HTTP, devolve 400 imediatamente
+     *   2. @Column(nullable = false)            — na camada BD, como safety net
      */
+    @NotBlank(message = "O título é obrigatório")
+    @Size(max = 100, message = "O título não pode ter mais de 100 caracteres")
     @Column(nullable = false)
     private String titulo;
 
-    // Sem @Column especial — a descrição é opcional (pode ser NULL na BD).
+    // A descrição é opcional — mas se fornecida, não pode exceder 500 caracteres.
+    @Size(max = 500, message = "A descrição não pode ter mais de 500 caracteres")
     private String descricao;
 
     /**
