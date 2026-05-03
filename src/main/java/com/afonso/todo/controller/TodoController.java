@@ -5,9 +5,11 @@ import com.afonso.todo.service.TodoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * CAMADA: Controller (entrada dos pedidos HTTP)
@@ -36,12 +38,21 @@ public class TodoController {
 
     /**
      * GET /api/todos
-     * Devolve a lista completa de todos.
-     * ResponseEntity.ok(...) é um atalho para status 200 OK + body com os dados.
+     * GET /api/todos?concluido=true
+     * GET /api/todos?concluido=false
+     *
+     * Sem query parameter devolve todos os todos.
+     * Com ?concluido=true/false filtra pelo estado de conclusão.
+     *
+     * @RequestParam(required = false) — o parâmetro é opcional; se ausente fica null.
      */
     @GetMapping
-    public ResponseEntity<List<Todo>> listarTodos() {
-        return ResponseEntity.ok(todoService.listarTodos());
+    public ResponseEntity<List<Todo>> listarTodos(@RequestParam(required = false) Optional<Boolean> concluido) {
+        // se o parâmetro foi fornecido, filtra; caso contrário devolve tudo
+        List<Todo> resultado = concluido.isPresent()
+                ? todoService.listarPorConcluido(concluido.get())
+                : todoService.listarTodos();
+        return ResponseEntity.ok(resultado);
     }
 
     /**
@@ -62,7 +73,7 @@ public class TodoController {
      * Devolve 201 Created (não 200) — convenção para criação de recursos.
      */
     @PostMapping
-    public ResponseEntity<Todo> criar(@RequestBody Todo todo) {
+    public ResponseEntity<Todo> criar(@Valid @RequestBody Todo todo) {
         return ResponseEntity.status(HttpStatus.CREATED).body(todoService.criar(todo));
     }
 
@@ -73,7 +84,7 @@ public class TodoController {
      * Devolve 200 OK com o Todo atualizado.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Todo> atualizar(@PathVariable Long id, @RequestBody Todo todo) {
+    public ResponseEntity<Todo> atualizar(@PathVariable Long id, @Valid @RequestBody Todo todo) {
         return ResponseEntity.ok(todoService.atualizar(id, todo));
     }
 

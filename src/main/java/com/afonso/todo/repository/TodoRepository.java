@@ -4,6 +4,8 @@ import com.afonso.todo.model.Todo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * CAMADA: Repository (acesso à base de dados)
  *
@@ -24,8 +26,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TodoRepository extends JpaRepository<Todo, Long> {
 
-    // Interface vazia por agora — os métodos básicos já vêm do JpaRepository.
-    // Se quiséssemos pesquisas personalizadas, poderíamos adicionar aqui, por exemplo:
-    //   List<Todo> findByConcluido(boolean concluido);
-    // O Spring Data JPA geraria o SQL automaticamente pelo nome do método!
+    /**
+     * Filtra todos pelo estado de conclusão.
+     * O Spring Data JPA gera automaticamente o SQL:
+     *   SELECT * FROM todos WHERE concluido = ?
+     *
+     * @param concluido true para devolver apenas concluídos, false para pendentes
+     */
+    List<Todo> findByConcluido(boolean concluido);
 }

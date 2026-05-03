@@ -39,6 +39,15 @@ public class TodoService {
     }
 
     /**
+     * Devolve todos os todos filtrados pelo estado de conclusão.
+     *
+     * @param concluido true para devolver apenas concluídos, false para pendentes
+     */
+    public List<Todo> listarPorConcluido(boolean concluido) {
+        return todoRepository.findByConcluido(concluido);
+    }
+
+    /**
      * Procura um Todo pelo seu id.
      * findById() devolve um Optional&lt;Todo&gt; — pode conter o objeto ou estar vazio.
      * orElseThrow() lança a nossa exceção personalizada se o Optional estiver vazio,
